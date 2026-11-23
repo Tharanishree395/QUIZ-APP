@@ -1,0 +1,289 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const QuizApp());
+}
+
+// Question model
+class Question {
+  final String question;
+  final List<String> options;
+  final int answer;
+
+  Question(this.question, this.options, this.answer);
+}
+
+// Quiz questions
+final List<Question> questions = [
+  Question('Which language is used in Flutter?', [
+    'Java',
+    'Dart',
+    'Python',
+    'C',
+  ], 1),
+
+  Question('What does CPU stand for?', [
+    'Central Processing Unit',
+    'Computer Personal Unit',
+    'Central Program Utility',
+    'Control Processing Unit',
+  ], 0),
+
+  Question('Which is a programming language?', [
+    'HTML',
+    'CSS',
+    'Python',
+    'XML',
+  ], 2),
+
+  Question('Which data structure uses FIFO?', [
+    'Stack',
+    'Queue',
+    'Tree',
+    'Graph',
+  ], 1),
+
+  Question('What is the brain of a computer?', [
+    'RAM',
+    'Hard Disk',
+    'CPU',
+    'Monitor',
+  ], 2),
+
+  Question('Which symbol is used for comments in Dart?', [
+    '//',
+    '<!-- -->',
+    '#',
+    '**',
+  ], 0),
+
+  Question('Which widget arranges items vertically?', [
+    'Row',
+    'Column',
+    'Stack',
+    'Container',
+  ], 1),
+
+  Question('Which keyword creates a constant in Dart?', [
+    'var',
+    'final',
+    'const',
+    'dynamic',
+  ], 2),
+
+  Question('Which database language is used for queries?', [
+    'SQL',
+    'HTML',
+    'CSS',
+    'Dart',
+  ], 0),
+
+  Question('What does OOP stand for?', [
+    'Object Oriented Programming',
+    'Open Operating Program',
+    'Object Order Process',
+    'Online Output Program',
+  ], 0),
+];
+
+class QuizApp extends StatelessWidget {
+  const QuizApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Quiz App',
+      theme: ThemeData(colorSchemeSeed: Colors.deepPurple, useMaterial3: true),
+      home: const QuizScreen(),
+    );
+  }
+}
+
+class QuizScreen extends StatefulWidget {
+  const QuizScreen({super.key});
+
+  @override
+  State<QuizScreen> createState() => _QuizScreenState();
+}
+
+class _QuizScreenState extends State<QuizScreen> {
+  int currentQuestion = 0;
+  int score = 0;
+  int? selectedAnswer;
+  bool answered = false;
+  bool showResult = false;
+
+  void selectAnswer(int index) {
+    if (answered) return;
+
+    setState(() {
+      selectedAnswer = index;
+      answered = true;
+
+      if (index == questions[currentQuestion].answer) {
+        score++;
+      }
+    });
+  }
+
+  void nextQuestion() {
+    setState(() {
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        selectedAnswer = null;
+        answered = false;
+      } else {
+        showResult = true;
+      }
+    });
+  }
+
+  void restartQuiz() {
+    setState(() {
+      currentQuestion = 0;
+      score = 0;
+      selectedAnswer = null;
+      answered = false;
+      showResult = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (showResult) {
+      return Scaffold(
+        backgroundColor: Colors.deepPurple.shade50,
+        body: Center(
+          child: Card(
+            margin: const EdgeInsets.all(25),
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.emoji_events,
+                    size: 80,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Quiz Completed!',
+                    style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Your Score: $score / 10',
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Percentage: ${score * 10}%',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 25),
+                  ElevatedButton.icon(
+                    onPressed: restartQuiz,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Restart Quiz'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Question q = questions[currentQuestion];
+
+    return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
+      appBar: AppBar(
+        title: const Text('My Quiz App'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Question ${currentQuestion + 1} of 10',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            LinearProgressIndicator(
+              value: (currentQuestion + 1) / questions.length,
+              minHeight: 9,
+              borderRadius: BorderRadius.circular(10),
+            ),
+
+            const SizedBox(height: 35),
+
+            Text(
+              q.question,
+              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 25),
+
+            ...List.generate(q.options.length, (index) {
+              Color color = Colors.white;
+
+              if (answered && index == q.answer) {
+                color = Colors.green.shade200;
+              } else if (answered && index == selectedAnswer) {
+                color = Colors.red.shade200;
+              }
+
+              return Card(
+                color: color,
+                child: ListTile(
+                  title: Text(q.options[index]),
+                  trailing: answered && index == q.answer
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : null,
+                  onTap: () => selectAnswer(index),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 15),
+
+            if (answered)
+              Text(
+                selectedAnswer == q.answer
+                    ? 'Correct Answer!'
+                    : 'Wrong Answer! Try the next question.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: selectedAnswer == q.answer ? Colors.green : Colors.red,
+                ),
+              ),
+
+            const Spacer(),
+
+            ElevatedButton(
+              onPressed: answered ? nextQuestion : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(16),
+              ),
+              child: Text(
+                currentQuestion == 9 ? 'See Results' : 'Next Question',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
